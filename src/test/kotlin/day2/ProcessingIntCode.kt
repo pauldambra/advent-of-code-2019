@@ -5,33 +5,32 @@ import org.junit.jupiter.api.Test
 
 class ProcessingIntCode {
 
-    @Test
-    fun `1,0,0,0,99 becomes 2,0,0,0,99 (1 + 1 = 2)`() {
-        val input = "1,0,0,0,99"
-        val output = "2,0,0,0,99"
-        assertThat(runProgram(input)).isEqualTo(output)
+    private fun processOpCode(instruction: String): String {
+        val x = instruction.split(",").map { it.toInt() }.toMutableList()
+        val a = x[1]
+        val b = x[2]
+        val i = x[3]
+        x[i] = a + b
+        return x.joinToString(",")
     }
 
-    private fun runProgram(input: String): String {
-        return input
+    @Test
+    fun `process a single block of addition OpCode`() {
+        val input = "1,10,20,2"
+        val output = "1,10,30,2"
+        assertThat(processOpCode(input)).isEqualTo(output)
     }
 
     @Test
-    fun `2,3,0,3,99 becomes 2,3,0,6,99 (3 * 2 = 6)`() {
-        val input = "2,3,0,3,99"
-        val output = "2,3,0,6,99"
-        assertThat(runProgram(input)).isEqualTo(output)
+    fun `process a single block of addition OpCode to a different output`() {
+        val input = "1,10,20,1"
+        val output = "1,30,20,1"
+        assertThat(processOpCode(input)).isEqualTo(output)
     }
+
     @Test
-    fun `2,4,4,5,99,0 becomes 2,4,4,5,99,9801 (99 * 99 = 9801)`() {
-        val input = "2,4,4,5,99,0"
-        val output = "2,4,4,5,99,9801"
-        assertThat(runProgram(input)).isEqualTo(output)
-    }
-    @Test
-    fun `1,1,1,4,99,5,6,0,99 becomes 30,1,1,4,2,5,6,0,99`() {
-        val input = "1,1,1,4,99,5,6,0,99"
-        val output = "30,1,1,4,2,5,6,0,99"
-        assertThat(runProgram(input)).isEqualTo(output)
+    fun `process a single block of addition OpCode that requires adding padding`() {
+        val input = "1,10,20,30"
+        val output = "1,10,20,30,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,30"
     }
 }
