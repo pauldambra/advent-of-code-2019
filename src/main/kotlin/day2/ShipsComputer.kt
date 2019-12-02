@@ -1,36 +1,41 @@
 package day2
 
-    fun processOpCode(instruction: String): String {
-        val everyFour = generateSequence(0) { it + 1 }.map { it * 4 }.iterator()
-        val x = instruction.split(",").map { it.toInt() }.toMutableList()
+object ShipsComputer {
+    var memory = mutableListOf<Int>()
 
-        var pointer = everyFour.next()
+    fun runProgram(program: String): String {
+        memory = program.split(",").map { it.toInt() }.toMutableList()
+
+        var addressPointer = 0
         var halt = false
 
         while (!halt) {
 
-            when (x[pointer]) {
-                1 -> {
-                    if (x[pointer + 3] >= x.size) {
-                        val toPad = x[pointer + 3] - x.size + 1
-                        val toAdd = arrayOfNulls<Int>(toPad).map { 0 }.toMutableList()
-                        x += toAdd
-                    }
-                    x[x[pointer + 3]] = x[x[pointer + 1]] + x[x[pointer + 2]]
-                }
-                2 -> {
-                    if (x[pointer + 3] >= x.size) {
-                        val toPad = x[pointer + 3] - x.size + 1
-                        val toAdd = arrayOfNulls<Int>(toPad).map { 0 }.toMutableList()
-                        x += toAdd
-                    }
-                    x[x[pointer + 3]] = x[x[pointer + 1]] * x[x[pointer + 2]]
-                }
+            when (readOpCode(addressPointer)) {
+                1 -> processInstruction(addressPointer, Int::plus)
+                2 -> processInstruction(addressPointer, Int::times)
                 99 -> halt = true
             }
 
-            pointer = everyFour.next()
+            addressPointer += 4
         }
 
-        return x.joinToString(",")
+        return memory.joinToString(",")
     }
+
+    private fun processInstruction(addressPointer: Int, operation: (Int, Int) -> Int) {
+        padMemory(addressPointer)
+        memory[memory[addressPointer + 3]] = operation(memory[memory[addressPointer + 1]],(memory[memory[addressPointer + 2]]))
+    }
+
+    private fun padMemory(pointer: Int) {
+        if (memory[pointer + 3] >= memory.size) {
+            val toPad = memory[pointer + 3] - memory.size + 1
+            val toAdd = arrayOfNulls<Int>(toPad).map { 0 }.toMutableList()
+            memory.plusAssign(toAdd)
+        }
+    }
+
+    private fun readOpCode(pointer: Int) = memory[pointer]
+}
+
