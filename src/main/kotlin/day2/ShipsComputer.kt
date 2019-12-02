@@ -38,4 +38,3 @@ object ShipsComputer {
 
     private fun readOpCode(pointer: Int) = memory[pointer]
 }
-
