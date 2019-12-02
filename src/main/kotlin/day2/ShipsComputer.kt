@@ -18,7 +18,7 @@ package day2
                         val toAdd = arrayOfNulls<Int>(toPad).map { 0 }.toMutableList()
                         x += toAdd
                     }
-                    x[x[pointer + 3]] = x[pointer + 1] + x[pointer + 2]
+                    x[x[pointer + 3]] = x[x[pointer + 1]] + x[x[pointer + 2]]
                 }
                 2 -> {
                     if (x[pointer + 3] >= x.size) {
@@ -26,7 +26,7 @@ package day2
                         val toAdd = arrayOfNulls<Int>(toPad).map { 0 }.toMutableList()
                         x += toAdd
                     }
-                    x[x[pointer + 3]] = x[pointer + 1] * x[pointer + 2]
+                    x[x[pointer + 3]] = x[x[pointer + 1]] * x[x[pointer + 2]]
                 }
                 99 -> halt = true
             }
