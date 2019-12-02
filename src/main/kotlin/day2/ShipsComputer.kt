@@ -8,10 +8,8 @@ package day2
         var halt = false
 
         while (!halt) {
-            println("processing instruction at $pointer")
-            val op = x[pointer]
 
-            when (op) {
+            when (x[pointer]) {
                 1 -> {
                     if (x[pointer + 3] >= x.size) {
                         val toPad = x[pointer + 3] - x.size + 1
