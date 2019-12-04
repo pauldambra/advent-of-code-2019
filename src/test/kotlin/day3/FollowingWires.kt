@@ -7,7 +7,7 @@ class FollowingWires {
 
     @Test
     fun `can parse instructions`() {
-        assertThat(parseInstruction(listOf("R1", "U30", "D100", "L123456789")))
+        assertThat(Instruction.parse(listOf("R1", "U30", "D100", "L123456789")))
             .isEqualTo(
                 listOf(
                     Instruction("R", 1),

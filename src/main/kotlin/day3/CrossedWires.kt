@@ -2,7 +2,15 @@ package day3
 
 import kotlin.math.absoluteValue
 
-data class Instruction(val direction: String, val count: Int)
+data class Instruction(val direction: String, val count: Int) {
+    companion object {
+        fun parse(ss: List<String>) =
+            ss.map { Instruction(
+                it.substring(0, 1),
+                it.substring(1).toInt()
+            ) }
+    }
+}
 
 data class GridCoord(val x: Int, val y: Int) {
     fun manhattanDistance() = x.absoluteValue + y.absoluteValue
@@ -43,13 +51,9 @@ private fun findIntersections(
     right: List<GridCoord>
 ) = left.intersect(right).minus(GridCoord(0, 0))
 
-fun parseInstruction(instructions: List<String>) =
-    instructions
-        .map { Instruction(it.substring(0, 1), it.substring(1).toInt()) }
-
 fun tracePath(wirePath: String): List<GridCoord> {
     val instructions = wirePath.split(",")
-    val parsedInstructions = parseInstruction(instructions)
+    val parsedInstructions = Instruction.parse(instructions)
 
     val tracer = CurrentPosition()
 
