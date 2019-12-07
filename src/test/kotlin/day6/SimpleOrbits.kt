@@ -145,6 +145,67 @@ COM - B - C - D - E - F
         assertThat(count).isEqualTo(333679)
     }
 
+
+    /*
+                              YOU
+                             /
+            G - H       J - K - L
+           /           /
+    COM - B - C - D - E - F
+                   \
+                    I - SAN
+     */
+    @Test
+    fun `part 2 example`() {
+        val s = """
+            COM)B
+            B)C
+            C)D
+            D)E
+            E)F
+            B)G
+            G)H
+            D)I
+            E)J
+            J)K
+            K)L
+            K)YOU
+            I)SAN
+        """.trimIndent()
+
+        val you = parse(s, "YOU")!!
+        val san = parse(s, "SAN")!!
+
+        val shortestRoute = findShortestRouteBetween(you, san)
+
+        assertThat(shortestRoute).isEqualTo(4)
+    }
+
+    private fun findShortestRouteBetween(you: SpaceObject, san: SpaceObject): Int {
+        val youPathToCOM: List<SpaceObject> = you.pathToCOM()
+
+        val sanPathToCOM: List<SpaceObject> = san.pathToCOM()
+
+        val intersection = sanPathToCOM.intersect(youPathToCOM).first()
+
+        val youRouteToIntersection = youPathToCOM.takeWhile { it != intersection }
+        val sanRouteToIntersection = sanPathToCOM.takeWhile { it != intersection }
+
+        return youRouteToIntersection.size + sanRouteToIntersection.size
+    }
+
+    @Test
+    fun `part 2 solution`() {
+        val s = this::class.java.getResource("/day6/puzzleInput.txt").readText().trim()
+
+        val you = parse(s, "YOU")!!
+        val san = parse(s, "SAN")!!
+
+        val shortestRoute = findShortestRouteBetween(you, san)
+
+        assertThat(shortestRoute).isEqualTo(370)
+    }
+
     private fun countDirectAndIndirectOrbits(com: SpaceObject?): Int {
         val queue: Queue<SpaceObject> = ArrayDeque<SpaceObject>()
         queue.add(com)
@@ -161,7 +222,7 @@ COM - B - C - D - E - F
     }
 }
 
-private fun parse(s: String): SpaceObject? {
+private fun parse(s: String, rootName: String = "COM"): SpaceObject? {
     val x = s
         .split("\n")
         .map { lines -> lines.split(")") }
@@ -178,7 +239,7 @@ private fun parse(s: String): SpaceObject? {
             acc
         }
 
-    return x["COM"]!!
+    return x[rootName]!!
 }
 
 private fun spaceObjectOrCOM(s: String) =
@@ -216,13 +277,23 @@ open class SpaceObject(val name: String) {
     }
 
     fun countStepsToCOM(): Int {
-        var x:SpaceObject? = this
+        var x: SpaceObject? = this
         var count = 0
         while (x != null && x != COM()) {
             count++
             x = x.isInOrbitAround
         }
         return count
+    }
+
+    fun pathToCOM(): List<SpaceObject> {
+        var x: SpaceObject? = this
+        val sos = mutableListOf<SpaceObject>()
+        while (x != null && x != COM()) {
+            x = x.isInOrbitAround
+            x?.let { sos.add(it) }
+        }
+        return sos
     }
 }
 
