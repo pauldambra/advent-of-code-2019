@@ -33,11 +33,13 @@ object ShipsComputer {
     var memory = mutableListOf<Int>()
     var output: Int? = null
 
-    fun runProgram(program: String, input: Int = 1): ProgramResult {
+    fun runProgram(program: String, input: List<Int> = listOf(1)): ProgramResult {
         memory = program.split(",").map { it.toInt() }.toMutableList()
 
         var addressPointer = 0
         var halt = false
+
+        val inputs = input.iterator()
 
         while (!halt) {
 
@@ -48,7 +50,7 @@ object ShipsComputer {
             when (oci.opCode) {
                 1 -> processInstruction(oci, addressPointer, Int::plus)
                 2 -> processInstruction(oci, addressPointer, Int::times)
-                3 -> writeInput(addressPointer, input)
+                3 -> writeInput(addressPointer, if (inputs.hasNext()) inputs.next() else 1)
                 4 -> {
                     output = readFirstParameter(oci, addressPointer)
                 }
@@ -72,6 +74,9 @@ object ShipsComputer {
 
         return ProgramResult(memory.joinToString(","), output)
     }
+
+    fun runProgram(program: String, input: Int) =
+        runProgram(program, listOf(input))
 
     private fun determinePointerJump(oci: OpCodeInstruction): Int {
         return when (oci.opCode) {
