@@ -1,6 +1,11 @@
 package day2
 
-data class ProgramResult(val memory: String, val output: Int?)
+data class ProgramHalted(
+    val memory: String,
+    val output: Int?,
+    val addressPointer: Int,
+    val state: String
+)
 
 data class OpCodeInstruction(val instruction: Int) {
 
@@ -33,14 +38,16 @@ class ShipsComputer {
     var memory = mutableListOf<Int>()
     var output: Int? = null
 
-    fun runProgram(program: String, inputs: Iterator<Int> = listOf(1).iterator()): ProgramResult {
-        memory = program.split(",").map { it.toInt() }.toMutableList()
+    fun runProgram(program: MutableList<Int>, inputs: Iterator<Int> = listOf(1).iterator(), pointerStart: Int = 0): ProgramHalted {
+        memory = program
 
-        var addressPointer = 0
-        var halt = false
+        var state = "continue"
 
-        while (!halt) {
+        var addressPointer = pointerStart
+//        println("Starting at pointer $addressPointer")
 
+        while (state == "continue") {
+//            println("step at pointer $addressPointer")
             val oci: OpCodeInstruction = readOpCode(addressPointer)
 //            println("running with memory: $memory at address $addressPointer and oci: $oci")
             var newPointer: Int? = null
@@ -48,7 +55,13 @@ class ShipsComputer {
             when (oci.opCode) {
                 1 -> processInstruction(oci, addressPointer, Int::plus)
                 2 -> processInstruction(oci, addressPointer, Int::times)
-                3 -> writeInput(addressPointer, if (inputs.hasNext()) inputs.next() else 1)
+                3 -> {
+                    if(inputs.hasNext()) {
+                        writeInput(addressPointer, inputs.next())
+                    } else {
+                        state = "pause"
+                    }
+                }
                 4 -> {
                     output = readFirstParameter(oci, addressPointer)
                 }
@@ -60,7 +73,7 @@ class ShipsComputer {
                 }
                 7 -> testForLessThan(oci, addressPointer)
                 8 -> testEquality(oci, addressPointer)
-                99 -> halt = true
+                99 -> state = "halt"
             }
 
             if (newPointer != null) {
@@ -70,11 +83,22 @@ class ShipsComputer {
             }
         }
 
-        return ProgramResult(memory.joinToString(","), output)
+        return ProgramHalted(memory.joinToString(","), output, addressPointer, state)
     }
 
-    fun runProgram(program: String, input: Int) =
-        runProgram(program, listOf(input).iterator())
+    fun runProgram(program: String, inputs: Iterator<Int> = listOf(1).iterator(), pointerStart: Int = 0) =
+        runProgram(
+            program.split(",").map { it.toInt() }.toMutableList(),
+            inputs,
+            pointerStart
+        )
+
+    fun runProgram(program: String, input: Int, pointerStart: Int = 0) =
+        runProgram(
+            program,
+            listOf(input).iterator(),
+            pointerStart
+        )
 
     private fun determinePointerJump(oci: OpCodeInstruction): Int {
         return when (oci.opCode) {
