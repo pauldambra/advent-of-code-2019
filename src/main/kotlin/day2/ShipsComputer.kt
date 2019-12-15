@@ -29,17 +29,15 @@ data class OpCodeInstruction(val instruction: Int) {
     }
 }
 
-object ShipsComputer {
+class ShipsComputer {
     var memory = mutableListOf<Int>()
     var output: Int? = null
 
-    fun runProgram(program: String, input: List<Int> = listOf(1)): ProgramResult {
+    fun runProgram(program: String, inputs: Iterator<Int> = listOf(1).iterator()): ProgramResult {
         memory = program.split(",").map { it.toInt() }.toMutableList()
 
         var addressPointer = 0
         var halt = false
-
-        val inputs = input.iterator()
 
         while (!halt) {
 
@@ -76,7 +74,7 @@ object ShipsComputer {
     }
 
     fun runProgram(program: String, input: Int) =
-        runProgram(program, listOf(input))
+        runProgram(program, listOf(input).iterator())
 
     private fun determinePointerJump(oci: OpCodeInstruction): Int {
         return when (oci.opCode) {

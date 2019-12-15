@@ -34,17 +34,181 @@ class Amplifiers {
         assertThat(maxThrusterSignal).isEqualTo(54321)
     }
 
-    private fun seekMaxThrusterSignal(program: String) =
-        Amplifier.possiblePhaseSettings.map { ps ->
-            var thrusterSignal = 0
-            ps.forEach { s ->
-                thrusterSignal = Amplifier(program, s, thrusterSignal).run()!!
+    @Test
+    fun `part 2 example 1`() {
+        val program = "3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5"
+        val expectedThrusterSignal = 139629729
+
+        FeedbackAmplifier.possiblePhaseSettings.forEach {
+            val a = FeedbackAmplifier(program, it[0])
+            val b = FeedbackAmplifier(program, it[1])
+            val c = FeedbackAmplifier(program, it[2])
+            val d = FeedbackAmplifier(program, it[3])
+            val e = FeedbackAmplifier(program, it[4])
+
+            var input: Int = 0
+            while (!e.halted()) {
+//                a.runProgram()
             }
-            thrusterSignal
-        }.max()
+        }
+    }
+}
+
+fun seekMaxThrusterSignal(program: String) =
+    Amplifier.possiblePhaseSettings.map { ps ->
+        var thrusterSignal = 0
+        ps.forEach { s ->
+            thrusterSignal = Amplifier(program, s, thrusterSignal).run()!!
+        }
+        thrusterSignal
+    }.max()
+
+class FeedbackAmplifier(val program: String, private val phaseSetting: Int) {
+
+//    val computer = ShipsComputer(program, phaseSetting)
+
+    fun halted(): Boolean {
+        return true
+    }
+
+    fun run(input: Int): Int? {
+//        return ShipsComputer().runProgram(program, listOf(phaseSetting, input)).output
+        return -1
+    }
+
+    companion object {
+        val possiblePhaseSettings = listOf(
+            listOf(5,6,7,8,9),
+            listOf(6,5,7,8,9),
+            listOf(7,5,6,8,9),
+            listOf(5,7,6,8,9),
+            listOf(6,7,5,8,9),
+            listOf(7,6,5,8,9),
+            listOf(7,6,8,5,9),
+            listOf(6,7,8,5,9),
+            listOf(8,7,6,5,9),
+            listOf(7,8,6,5,9),
+            listOf(6,8,7,5,9),
+            listOf(8,6,7,5,9),
+            listOf(8,5,7,6,9),
+            listOf(5,8,7,6,9),
+            listOf(7,8,5,6,9),
+            listOf(8,7,5,6,9),
+            listOf(5,7,8,6,9),
+            listOf(7,5,8,6,9),
+            listOf(6,5,8,7,9),
+            listOf(5,6,8,7,9),
+            listOf(8,6,5,7,9),
+            listOf(6,8,5,7,9),
+            listOf(5,8,6,7,9),
+            listOf(8,5,6,7,9),
+            listOf(9,5,6,7,8),
+            listOf(5,9,6,7,8),
+            listOf(6,9,5,7,8),
+            listOf(9,6,5,7,8),
+            listOf(5,6,9,7,8),
+            listOf(6,5,9,7,8),
+            listOf(6,5,7,9,8),
+            listOf(5,6,7,9,8),
+            listOf(7,6,5,9,8),
+            listOf(6,7,5,9,8),
+            listOf(5,7,6,9,8),
+            listOf(7,5,6,9,8),
+            listOf(7,9,6,5,8),
+            listOf(9,7,6,5,8),
+            listOf(6,7,9,5,8),
+            listOf(7,6,9,5,8),
+            listOf(9,6,7,5,8),
+            listOf(6,9,7,5,8),
+            listOf(5,9,7,6,8),
+            listOf(9,5,7,6,8),
+            listOf(7,5,9,6,8),
+            listOf(5,7,9,6,8),
+            listOf(9,7,5,6,8),
+            listOf(7,9,5,6,8),
+            listOf(8,9,5,6,7),
+            listOf(9,8,5,6,7),
+            listOf(5,8,9,6,7),
+            listOf(8,5,9,6,7),
+            listOf(9,5,8,6,7),
+            listOf(5,9,8,6,7),
+            listOf(5,9,6,8,7),
+            listOf(9,5,6,8,7),
+            listOf(6,5,9,8,7),
+            listOf(5,6,9,8,7),
+            listOf(9,6,5,8,7),
+            listOf(6,9,5,8,7),
+            listOf(6,8,5,9,7),
+            listOf(8,6,5,9,7),
+            listOf(5,6,8,9,7),
+            listOf(6,5,8,9,7),
+            listOf(8,5,6,9,7),
+            listOf(5,8,6,9,7),
+            listOf(9,8,6,5,7),
+            listOf(8,9,6,5,7),
+            listOf(6,9,8,5,7),
+            listOf(9,6,8,5,7),
+            listOf(8,6,9,5,7),
+            listOf(6,8,9,5,7),
+            listOf(7,8,9,5,6),
+            listOf(8,7,9,5,6),
+            listOf(9,7,8,5,6),
+            listOf(7,9,8,5,6),
+            listOf(8,9,7,5,6),
+            listOf(9,8,7,5,6),
+            listOf(9,8,5,7,6),
+            listOf(8,9,5,7,6),
+            listOf(5,9,8,7,6),
+            listOf(9,5,8,7,6),
+            listOf(8,5,9,7,6),
+            listOf(5,8,9,7,6),
+            listOf(5,7,9,8,6),
+            listOf(7,5,9,8,6),
+            listOf(9,5,7,8,6),
+            listOf(5,9,7,8,6),
+            listOf(7,9,5,8,6),
+            listOf(9,7,5,8,6),
+            listOf(8,7,5,9,6),
+            listOf(7,8,5,9,6),
+            listOf(5,8,7,9,6),
+            listOf(8,5,7,9,6),
+            listOf(7,5,8,9,6),
+            listOf(5,7,8,9,6),
+            listOf(6,7,8,9,5),
+            listOf(7,6,8,9,5),
+            listOf(8,6,7,9,5),
+            listOf(6,8,7,9,5),
+            listOf(7,8,6,9,5),
+            listOf(8,7,6,9,5),
+            listOf(8,7,9,6,5),
+            listOf(7,8,9,6,5),
+            listOf(9,8,7,6,5),
+            listOf(8,9,7,6,5),
+            listOf(7,9,8,6,5),
+            listOf(9,7,8,6,5),
+            listOf(9,6,8,7,5),
+            listOf(6,9,8,7,5),
+            listOf(8,9,6,7,5),
+            listOf(9,8,6,7,5),
+            listOf(6,8,9,7,5),
+            listOf(8,6,9,7,5),
+            listOf(7,6,9,8,5),
+            listOf(6,7,9,8,5),
+            listOf(9,7,6,8,5),
+            listOf(7,9,6,8,5),
+            listOf(6,9,7,8,5),
+            listOf(9,6,7,8,5)
+        )
+    }
 }
 
 class Amplifier(val program: String, private val phaseSetting: Int, val input: Int) {
+    private val computer = ShipsComputer()
+
+    fun run(): Int? {
+        return computer.runProgram(program, listOf(phaseSetting, input).iterator()).output
+    }
+
     companion object {
         val possiblePhaseSettings = listOf(
             listOf(0, 1, 2, 3, 4),
@@ -168,9 +332,5 @@ class Amplifier(val program: String, private val phaseSetting: Int, val input: I
             listOf(1, 4, 2, 3, 0),
             listOf(4, 1, 2, 3, 0)
         )
-    }
-
-    fun run(): Int? {
-        return ShipsComputer.runProgram(program, listOf(phaseSetting, input)).output
     }
 }
