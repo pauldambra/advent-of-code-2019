@@ -36,7 +36,7 @@ class ShipsComputerWithChannels(
                 2 -> processInstruction(oci, addressPointer, Long::times)
                 3 -> {
                     val input = inputs.receive() //blocks waiting for input?
-                    writeInput(addressPointer, input)
+                    writeFromInput(oci, addressPointer, input)
                     println("$name: read $input from input channel")
                 }
                 4 -> {
@@ -105,23 +105,42 @@ class ShipsComputerWithChannels(
     }
 
     private fun testForLessThan(oci: OpCodeInstruction, addressPointer: Long) {
-        val targetAddress = memory[(addressPointer + 3).toInt()]
+        val targetAddress = readWriteTargetThree(oci, addressPointer)
         val a = readFirstParameter(oci, addressPointer)
         val b = readSecondParameter(oci, addressPointer)
         writeTo(targetAddress, if (a < b) 1 else 0)
     }
 
     private fun testEquality(oci: OpCodeInstruction, addressPointer: Long) {
-        val targetAddress = memory[(addressPointer + 3).toInt()]
+        val targetAddress = readWriteTargetThree(oci, addressPointer)
         val a = readFirstParameter(oci, addressPointer)
         val b = readSecondParameter(oci, addressPointer)
         writeTo(targetAddress, if (a == b) 1 else 0)
     }
 
-    private fun writeInput(addressPointer: Long, input: Long) {
-        val targetAddress = memory[(addressPointer + 1).toInt()]
+    /**
+     * day 5 instructions said parameters that write will never be in IMMEDIATE mode
+     */
+    private fun writeFromInput(oci: OpCodeInstruction, addressPointer: Long, input: Long) {
+        val targetAddress = readWriteTargetOne(oci, addressPointer)
         writeTo(targetAddress, input)
     }
+
+    private fun readWriteTargetOne(oci: OpCodeInstruction, addressPointer: Long) =
+        when (oci.firstParameterMode) {
+            OpCodeInstruction.POSITIONAL -> memory[(addressPointer + 1).toInt()]
+            OpCodeInstruction.IMMEDIATE -> throw Exception("write parameters should never be in immediate mode but got $oci at $addressPointer")
+            OpCodeInstruction.RELATIVE -> (memory[(addressPointer + 1).toInt()] + relativeBase)
+            else -> throw Exception("bad OpCodeInstruction for first parameter $oci")
+        }
+
+    private fun readWriteTargetThree(oci: OpCodeInstruction, addressPointer: Long) =
+        when (oci.thirdParameterMode) {
+            OpCodeInstruction.POSITIONAL -> memory[(addressPointer + 3).toInt()]
+            OpCodeInstruction.IMMEDIATE -> throw Exception("write parameters should never be in immediate mode but got $oci at $addressPointer")
+            OpCodeInstruction.RELATIVE -> (memory[(addressPointer + 3).toInt()] + relativeBase)
+            else -> throw Exception("bad OpCodeInstruction for first parameter $oci")
+        }
 
     private fun writeTo(targetAddress: Long, input: Long) {
         padMemory(targetAddress)
@@ -132,7 +151,8 @@ class ShipsComputerWithChannels(
         padMemory(memory[(addressPointer + 3).toInt()])
         val firstParameter = readFirstParameter(oci, addressPointer)
         val secondParameter = readSecondParameter(oci, addressPointer)
-        memory[memory[(addressPointer + 3).toInt()].toInt()] = operation(firstParameter, secondParameter)
+        val targetAddress = readWriteTargetThree(oci, addressPointer)
+        memory[targetAddress.toInt()] = operation(firstParameter, secondParameter)
     }
 
     private fun readFirstParameter(oci: OpCodeInstruction, addressPointer: Long): Long =
