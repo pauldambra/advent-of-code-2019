@@ -39,29 +39,88 @@ class PartTwoExamples  {
         assertThat(ShipsComputer().runProgram(program, 7).output).isEqualTo(0)
     }
 
-    // a bug or my misunderstanding means this is opposite?!
-//    @Test
-//    fun `3,9,7,9,10,9,4,9,99,-1,8 - Using position mode, consider whether the input is less than 8 and output 1 (if it is) or 0 (if it is not)`() {
-//        val program = "3,9,7,9,10,9,4,9,99,-1,8"
-//        assertThat(ShipsComputer().runProgram(program, 8).output).isEqualTo(1)
-//        assertThat(ShipsComputer().runProgram(program, 2).output).isEqualTo(0)
-//    }
+    @Test
+    fun `less than 8 --- 3,9,7,9,10,9,4,9,99,-1,8 - Using position mode, consider whether the input is less than 8 and output 1 (if it is) or 0 (if it is not)`() {
+        val program = "3,9,7,9,10,9,4,9,99,-1,8"
 
-    // a bug or my misunderstanding means this is opposite?!
-    //    @Test
-//    fun `3,3,1108,-1,8,3,4,3,99 - Using immediate mode, consider whether the input is equal to 8 and output 1 (if it is) or 0 (if it is not)`() {
-//        val program = "3,3,1108,-1,8,3,4,3,99"
-//        assertThat(ShipsComputer().runProgram(program, 8).output).isEqualTo(1)
-//        assertThat(ShipsComputer().runProgram(program, 81).output).isEqualTo(0)
-//    }
-    // a bug or my misunderstanding means this is opposite?!
-//    @Test
-//    fun `3,3,1107,-1,8,3,4,3,99 - Using immediate mode, consider whether the input is less than 8 and output 1 (if it is) or 0 (if it is not)`() {
-//        val program = "3,3,1107,-1,8,3,4,3,99"
-//        assertThat(ShipsComputer().runProgram(program, 8).output).isEqualTo(1)
-//        assertThat(ShipsComputer().runProgram(program, 18).output).isEqualTo(0)
-//    }
+        testChannelComputer(program, { output ->
+            assertThat(output).isEqualTo(1)
+        }, 7)
+    }
+    @Test
+    fun `less than 8 --- larger example - Using position mode, consider whether the input is less than 8 and output 999 (if it is) or 1001 (if it is not)`() {
+        val program = "3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99"
 
+        testChannelComputer(program, { output ->
+            assertThat(output).isEqualTo(999)
+        }, 7)
+    }
+
+    @Test
+    fun `more than 8 --- larger example - Using position mode, consider whether the input is less than 8 and output 999 (if it is) or 1001 (if it is not)`() {
+        val program = "3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99"
+
+        testChannelComputer(program, { output ->
+            assertThat(output).isEqualTo(1001)
+        }, 198)
+    }
+
+    @Test
+    fun `more than 8 --- 3,9,7,9,10,9,4,9,99,-1,8 - Using position mode, consider whether the input is less than 8 and output 1 (if it is) or 0 (if it is not)`() {
+        val program = "3,9,7,9,10,9,4,9,99,-1,8"
+
+        testChannelComputer(program, { output ->
+            assertThat(output).isEqualTo(0)
+        }, 9)
+    }
+
+
+
+
+        @Test
+    fun `not equal to 8 --- 3,3,1108,-1,8,3,4,3,99 - Using immediate mode, consider whether the input is equal to 8 and output 1 (if it is) or 0 (if it is not)`() {
+        val program = "3,3,1108,-1,8,3,4,3,99"
+
+        testChannelComputer(program, { output ->
+            assertThat(output).isEqualTo(0)
+        }, 7)
+    }
+
+    @Test
+    fun `equal to 8 --- 3,3,1108,-1,8,3,4,3,99 - Using immediate mode, consider whether the input is equal to 8 and output 1 (if it is) or 0 (if it is not)`() {
+        val program = "3,3,1108,-1,8,3,4,3,99"
+
+        testChannelComputer(program, { output ->
+            assertThat(output).isEqualTo(1)
+        }, 8)
+    }
+
+    @Test
+    fun `less than 8 --- 3,3,1107,-1,8,3,4,3,99 - Using immediate mode, consider whether the input is less than 8 and output 1 (if it is) or 0 (if it is not)`() {
+        val program = "3,3,1107,-1,8,3,4,3,99"
+
+        testChannelComputer(program, { output ->
+            assertThat(output).isEqualTo(1)
+        }, 7)
+    }
+
+    @Test
+    fun `8 --- 3,3,1107,-1,8,3,4,3,99 - Using immediate mode, consider whether the input is less than 8 and output 1 (if it is) or 0 (if it is not)`() {
+        val program = "3,3,1107,-1,8,3,4,3,99"
+
+        testChannelComputer(program, { output ->
+            assertThat(output).isEqualTo(0)
+        }, 8)
+    }
+
+    @Test
+    fun `more than 8 --- 3,3,1107,-1,8,3,4,3,99 - Using immediate mode, consider whether the input is less than 8 and output 1 (if it is) or 0 (if it is not)`() {
+        val program = "3,3,1107,-1,8,3,4,3,99"
+
+        testChannelComputer(program, { output ->
+            assertThat(output).isEqualTo(0)
+        }, 9)
+    }
 
     @Test
     fun `3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9 (using position mode)`() {
@@ -89,6 +148,15 @@ class PartTwoExamples  {
     fun `part 2 solution`() {
         val program = this::class.java.getResource("/day5/puzzleInput.txt").readText().trim()
 
+        testChannelComputer(program, { output ->
+            if (output != 0) {
+                assertThat(output).isEqualTo(652726)
+            }
+        }, 5)
+
+    }
+
+    private fun testChannelComputer(program: String, assertion: (Int) -> Unit, input: Int) {
         val inputs = Channel<Int>()
         val outputs = Channel<Int>()
         val halts = Channel<Boolean>()
@@ -105,16 +173,15 @@ class PartTwoExamples  {
         }
 
         runBlocking {
-            inputs.send(5)
+            inputs.send(input)
             for (output in outputs) {
-                if (output != 0) {
-                    assertThat(output).isEqualTo(652726)
-                    inputs.close()
-                    outputs.close()
-                    halts.close()
-                }
+                assertion(output)
+
+                println("closing channels")
+                inputs.close()
+                outputs.close()
+                halts.close()
             }
         }
-
     }
 }

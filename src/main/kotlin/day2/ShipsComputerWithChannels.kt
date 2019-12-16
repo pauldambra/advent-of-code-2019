@@ -46,6 +46,7 @@ class ShipsComputerWithChannels(
                 7 -> testForLessThan(oci, addressPointer)
                 8 -> testEquality(oci, addressPointer)
                 99 -> {
+                    println("halting")
                     halted = true
                     halts.send(halted)
                 }
@@ -70,7 +71,9 @@ class ShipsComputerWithChannels(
     }
 
     private fun jumpIfTrue(oci: OpCodeInstruction, addressPointer: Int): Int? {
-        val shouldSetPointer = readFirstParameter(oci, addressPointer) != 0
+        val firstValue = readFirstParameter(oci, addressPointer)
+        val shouldSetPointer = firstValue != 0
+        println("read $firstValue from $addressPointer and decided whether to jump $shouldSetPointer")
         return when {
             shouldSetPointer -> readSecondParameter(oci, addressPointer)
             else -> null
