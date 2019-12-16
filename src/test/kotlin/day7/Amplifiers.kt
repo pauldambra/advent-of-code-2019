@@ -47,7 +47,7 @@ class Amplifiers {
     @Test
     fun `part 2 example 1`() {
         val program = "3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5"
-        val expectedThrusterSignal = 139629729
+        val expectedThrusterSignal = 139629729L
         val phaseSetting = listOf(9, 8, 7, 6, 5)
 
         val maxThrusterSignal = getMaxThrusterSignalForPhaseSetting(program, phaseSetting)
@@ -66,7 +66,7 @@ class Amplifiers {
     fun `part 2 example 2`() {
         val program =
             "3,52,1001,52,-5,52,3,53,1,52,56,54,1007,54,5,55,1005,55,26,1001,54,-5,54,1105,1,12,1,53,54,53,1008,54,0,55,1001,55,1,55,2,53,55,53,4,53,1001,56,-1,56,1005,56,6,99,0,0,0,0,10"
-        val expectedThrusterSignal = 18216
+        val expectedThrusterSignal = 18216L
 
         val phaseSetting = listOf(9, 7, 8, 5, 6)
 
@@ -77,16 +77,16 @@ class Amplifiers {
     private fun getMaxThrusterSignalForPhaseSetting(
         program: String,
         phaseSetting: List<Int>
-    ): Int {
+    ): Long {
         val parsedProgram = ShipsComputerWithChannels.parseProgram(program)
 
-        val aInput = Channel<Int>()
-        val bInput = Channel<Int>()
-        val cInput = Channel<Int>()
-        val dInput = Channel<Int>()
-        val eInput = Channel<Int>()
+        val aInput = Channel<Long>()
+        val bInput = Channel<Long>()
+        val cInput = Channel<Long>()
+        val dInput = Channel<Long>()
+        val eInput = Channel<Long>()
 
-        val eOut = Channel<Int>()
+        val eOut = Channel<Long>()
 
         val aHalt = Channel<Boolean>()
         val bHalt = Channel<Boolean>()
@@ -101,13 +101,13 @@ class Amplifiers {
         val e = ShipsComputerWithChannels(parsedProgram, eInput, eOut, eHalt, "e")
 
         GlobalScope.launch {
-            eInput.send(phaseSetting[4])
-            dInput.send(phaseSetting[3])
-            cInput.send(phaseSetting[2])
-            bInput.send(phaseSetting[1])
+            eInput.send(phaseSetting[4].toLong())
+            dInput.send(phaseSetting[3].toLong())
+            cInput.send(phaseSetting[2].toLong())
+            bInput.send(phaseSetting[1].toLong())
 
-            aInput.send(phaseSetting[0])
-            aInput.send(0)
+            aInput.send(phaseSetting[0].toLong())
+            aInput.send(0L)
         }
 
         GlobalScope.launch { a.run() }
@@ -116,10 +116,10 @@ class Amplifiers {
         GlobalScope.launch { d.run() }
         GlobalScope.launch { e.run() }
 
-        var thrusterSignal = -1
+        var thrusterSignal = -1L
         runBlocking {
 
-            val eOutputs = mutableListOf<Int>()
+            val eOutputs = mutableListOf<Long>()
             for (output in eOut) {
                 eOutputs.add(output)
                 if (!aInput.isClosedForReceive) {

@@ -152,5 +152,5 @@ class ShipsComputer {
         }
     }
 
-    private fun readOpCode(pointer: Int): OpCodeInstruction = OpCodeInstruction(memory[pointer])
+    private fun readOpCode(pointer: Int): OpCodeInstruction = OpCodeInstruction(memory[pointer].toLong())
 }

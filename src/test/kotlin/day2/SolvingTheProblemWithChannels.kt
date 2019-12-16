@@ -13,7 +13,7 @@ class SolvingTheProblemWithChannels {
     @ExperimentalCoroutinesApi
     private val infiniteChannelOfOnes = GlobalScope.produce {
         while (true) {
-            send(1)
+            send(1L)
         }
     }
 
@@ -27,7 +27,7 @@ class SolvingTheProblemWithChannels {
     @Test
     fun `running part one`() {
         val inputs = infiniteChannelOfOnes
-        val outputs = Channel<Int>()
+        val outputs = Channel<Long>()
         val halts = Channel<Boolean>()
 
         val computer = ShipsComputerWithChannels(
@@ -65,7 +65,7 @@ class SolvingTheProblemWithChannels {
         for (noun in 0..99) {
             for (verb in 0..99) {
                 val inputs = infiniteChannelOfOnes
-                val outputs = Channel<Int>()
+                val outputs = Channel<Long>()
                 val halts = Channel<Boolean>()
 
                 val computer = ShipsComputerWithChannels(
@@ -94,7 +94,7 @@ class SolvingTheProblemWithChannels {
             }
         }
 
-        val matchingResults = results.filter { it.output == 19690720 }
+        val matchingResults = results.filter { it.output == 19690720L }
         assertThat(matchingResults).hasSize(1)
         val matchingResult = matchingResults.first()
 
@@ -105,4 +105,4 @@ class SolvingTheProblemWithChannels {
     }
 }
 
-data class ResultSet(val output: Int, val noun: Int, val verb: Int)
+data class ResultSet(val output: Long, val noun: Int, val verb: Int)

@@ -1,6 +1,6 @@
 package day2
 
-data class OpCodeInstruction(val instruction: Int) {
+data class OpCodeInstruction(val instruction: Long) {
 
     private val parameters: List<Int>
 
@@ -24,5 +24,6 @@ data class OpCodeInstruction(val instruction: Int) {
     companion object {
         const val POSITIONAL = 0
         const val IMMEDIATE = 1
+        const val RELATIVE = 2
     }
 }

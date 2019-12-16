@@ -149,16 +149,16 @@ class PartTwoExamples  {
         val program = this::class.java.getResource("/day5/puzzleInput.txt").readText().trim()
 
         testChannelComputer(program, { output ->
-            if (output != 0) {
+            if (output != 0L) {
                 assertThat(output).isEqualTo(652726)
             }
         }, 5)
 
     }
 
-    private fun testChannelComputer(program: String, assertion: (Int) -> Unit, input: Int) {
-        val inputs = Channel<Int>()
-        val outputs = Channel<Int>()
+    private fun testChannelComputer(program: String, assertion: (Long) -> Unit, input: Long) {
+        val inputs = Channel<Long>()
+        val outputs = Channel<Long>()
         val halts = Channel<Boolean>()
 
         val computer = ShipsComputerWithChannels(
