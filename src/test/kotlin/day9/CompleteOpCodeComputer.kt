@@ -133,4 +133,28 @@ class CompleteOpCodeComputer {
         assertThat(xs).hasSize(1)
         assertThat(xs.first()).isEqualTo(2453265701L)
     }
+
+    @Test
+    fun `solving part 2`() {
+        val program = ShipsComputerWithChannels.parseProgram(this::class.java.getResource("/day9/puzzleInput.txt").readText().trim())
+        val inputs = Channel<Long>()
+        val outputs = Channel<Long>()
+        val halts = Channel<Boolean>()
+
+        val computer = ShipsComputerWithChannels(program, inputs, outputs, halts, "p1")
+
+        GlobalScope.launch {
+            computer.run()
+        }
+
+        val xs = mutableListOf<Long>()
+        runBlocking {
+            inputs.send(2)
+            for (x in outputs) {
+                xs.add(x)
+            }
+        }
+        assertThat(xs).hasSize(1)
+        assertThat(xs.first()).isEqualTo(2453265701L)
+    }
 }

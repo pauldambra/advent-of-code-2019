@@ -152,7 +152,7 @@ class ShipsComputerWithChannels(
         val firstParameter = readFirstParameter(oci, addressPointer)
         val secondParameter = readSecondParameter(oci, addressPointer)
         val targetAddress = readWriteTargetThree(oci, addressPointer)
-        memory[targetAddress.toInt()] = operation(firstParameter, secondParameter)
+        writeTo(targetAddress, operation(firstParameter, secondParameter))
     }
 
     private fun readFirstParameter(oci: OpCodeInstruction, addressPointer: Long): Long =
