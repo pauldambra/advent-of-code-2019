@@ -1,10 +1,13 @@
 package day7
 
-import day2.ProgramHalted
 import day2.ShipsComputer
+import day2.ShipsComputerWithChannels
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
+@ExperimentalCoroutinesApi
 class Amplifiers {
 
     @Test
@@ -44,11 +47,12 @@ class Amplifiers {
     @Test
     fun `part 2 example 1`() {
         val program = "3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5"
-        val expectedThrusterSignal = 18216
+        val expectedThrusterSignal = 139629729
+        val phaseSetting = listOf(9, 8, 7, 6, 5)
 
-        val thrusterSignals = seekMaxThrusterSignalViaFeedback(program, listOf(listOf(9, 8, 7, 6, 5)))
+        val maxThrusterSignal = getMaxThrusterSignalForPhaseSetting(program, phaseSetting)
+        assertThat(maxThrusterSignal).isEqualTo(expectedThrusterSignal)
 
-        assertThat(thrusterSignals.map { it.last() }.max()).isEqualTo(expectedThrusterSignal)
     }
 
     /**
@@ -60,12 +64,74 @@ class Amplifiers {
      */
     @Test
     fun `part 2 example 2`() {
-        val program = "3,52,1001,52,-5,52,3,53,1,52,56,54,1007,54,5,55,1005,55,26,1001,54,-5,54,1105,1,12,1,53,54,53,1008,54,0,55,1001,55,1,55,2,53,55,53,4,53,1001,56,-1,56,1005,56,6,99,0,0,0,0,10"
+        val program =
+            "3,52,1001,52,-5,52,3,53,1,52,56,54,1007,54,5,55,1005,55,26,1001,54,-5,54,1105,1,12,1,53,54,53,1008,54,0,55,1001,55,1,55,2,53,55,53,4,53,1001,56,-1,56,1005,56,6,99,0,0,0,0,10"
         val expectedThrusterSignal = 18216
 
-        val thrusterSignals = seekMaxThrusterSignalViaFeedback(program, listOf(listOf(9, 7, 8, 5, 6)))
+        val phaseSetting = listOf(9, 7, 8, 5, 6)
 
-        assertThat(thrusterSignals.map { it.last() }.max()).isEqualTo(expectedThrusterSignal)
+        val maxThrusterSignal = getMaxThrusterSignalForPhaseSetting(program, phaseSetting)
+        assertThat(maxThrusterSignal).isEqualTo(expectedThrusterSignal)
+    }
+
+    private fun getMaxThrusterSignalForPhaseSetting(
+        program: String,
+        phaseSetting: List<Int>
+    ): Int {
+        val parsedProgram = ShipsComputerWithChannels.parseProgram(program)
+
+        val aInput = Channel<Int>()
+        val bInput = Channel<Int>()
+        val cInput = Channel<Int>()
+        val dInput = Channel<Int>()
+        val eInput = Channel<Int>()
+
+        val eOut = Channel<Int>()
+
+        val aHalt = Channel<Boolean>()
+        val bHalt = Channel<Boolean>()
+        val cHalt = Channel<Boolean>()
+        val dHalt = Channel<Boolean>()
+        val eHalt = Channel<Boolean>()
+
+        val a = ShipsComputerWithChannels(parsedProgram, aInput, bInput, aHalt, "a")
+        val b = ShipsComputerWithChannels(parsedProgram, bInput, cInput, bHalt, "b")
+        val c = ShipsComputerWithChannels(parsedProgram, cInput, dInput, cHalt, "c")
+        val d = ShipsComputerWithChannels(parsedProgram, dInput, eInput, dHalt, "d")
+        val e = ShipsComputerWithChannels(parsedProgram, eInput, eOut, eHalt, "e")
+
+        GlobalScope.launch {
+            eInput.send(phaseSetting[4])
+            dInput.send(phaseSetting[3])
+            cInput.send(phaseSetting[2])
+            bInput.send(phaseSetting[1])
+
+            aInput.send(phaseSetting[0])
+            aInput.send(0)
+        }
+
+        GlobalScope.launch { a.run() }
+        GlobalScope.launch { b.run() }
+        GlobalScope.launch { c.run() }
+        GlobalScope.launch { d.run() }
+        GlobalScope.launch { e.run() }
+
+        var thrusterSignal = -1
+        runBlocking {
+
+            val eOutputs = mutableListOf<Int>()
+            for (output in eOut) {
+                eOutputs.add(output)
+                if (!aInput.isClosedForReceive) {
+                    aInput.send(output)
+                }
+            }
+
+//            println("e is halting with last output from e as ${eOutputs.last()}")
+            thrusterSignal = eOutputs.last()
+
+        }
+        return thrusterSignal
     }
 
     @Test
@@ -73,67 +139,16 @@ class Amplifiers {
         val program =
             "3,8,1001,8,10,8,105,1,0,0,21,46,59,80,105,122,203,284,365,446,99999,3,9,102,3,9,9,1001,9,5,9,102,2,9,9,1001,9,3,9,102,4,9,9,4,9,99,3,9,1002,9,2,9,101,2,9,9,4,9,99,3,9,101,5,9,9,1002,9,3,9,1001,9,3,9,1002,9,2,9,4,9,99,3,9,1002,9,4,9,1001,9,2,9,102,4,9,9,101,3,9,9,102,2,9,9,4,9,99,3,9,102,5,9,9,101,4,9,9,102,3,9,9,4,9,99,3,9,1002,9,2,9,4,9,3,9,101,1,9,9,4,9,3,9,1002,9,2,9,4,9,3,9,1001,9,2,9,4,9,3,9,1001,9,1,9,4,9,3,9,1001,9,1,9,4,9,3,9,1001,9,2,9,4,9,3,9,101,1,9,9,4,9,3,9,101,1,9,9,4,9,3,9,1001,9,1,9,4,9,99,3,9,1002,9,2,9,4,9,3,9,1001,9,1,9,4,9,3,9,1002,9,2,9,4,9,3,9,101,1,9,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,1,9,4,9,3,9,101,2,9,9,4,9,3,9,1001,9,1,9,4,9,3,9,1002,9,2,9,4,9,3,9,1002,9,2,9,4,9,99,3,9,1001,9,1,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,2,9,4,9,3,9,101,2,9,9,4,9,3,9,1001,9,1,9,4,9,3,9,101,1,9,9,4,9,3,9,1001,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,2,9,4,9,99,3,9,102,2,9,9,4,9,3,9,1001,9,1,9,4,9,3,9,101,1,9,9,4,9,3,9,1001,9,1,9,4,9,3,9,101,1,9,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,2,9,4,9,3,9,1002,9,2,9,4,9,3,9,1002,9,2,9,4,9,3,9,101,2,9,9,4,9,99,3,9,102,2,9,9,4,9,3,9,102,2,9,9,4,9,3,9,101,1,9,9,4,9,3,9,1002,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,102,2,9,9,4,9,3,9,1002,9,2,9,4,9,3,9,1002,9,2,9,4,9,3,9,1001,9,1,9,4,9,3,9,102,2,9,9,4,9,99"
 
-        val maxThrusterSignal = seekMaxThrusterSignalViaFeedback(program, FeedbackAmplifier.possiblePhaseSettings)
-
-        assertThat(maxThrusterSignal.map { it.last() }.max()).isGreaterThan(436)
-        assertThat(maxThrusterSignal.map { it.last() }.max()).isEqualTo(-1)
-    }
-
-    private fun seekMaxThrusterSignalViaFeedback(
-        program: String,
-        phaseSettings: List<List<Int>>
-    ): List<List<Int>> {
-        return phaseSettings.map {
-            println("starting for phase setting $it")
-
-            val a = FeedbackAmplifier("a", program, it[0])
-            val b = FeedbackAmplifier("b", program, it[1])
-            val c = FeedbackAmplifier("c", program, it[2])
-            val d = FeedbackAmplifier("d", program, it[3])
-            val e = FeedbackAmplifier("e", program, it[4])
-
-            val aSignals = mutableListOf<Int>()
-            val bSignals = mutableListOf<Int>()
-            val cSignals = mutableListOf<Int>()
-            val dSignals = mutableListOf<Int>()
-            val eSignals = mutableListOf(0)
-
-            var loopCount = 0
-            while (!e.halted()) {
-                if (loopCount++ > 10000) {
-                    throw Exception("oh bugger it")
-                }
-                aSignals.add(a.run(eSignals.last()))
-                bSignals.add(b.run(aSignals.last()))
-                cSignals.add(c.run(bSignals.last()))
-                dSignals.add(d.run(cSignals.last()))
-                eSignals.add(e.run(dSignals.last()))
-            }
-
-            eSignals
+        val thrusterSignals = FeedbackAmplifier.possiblePhaseSettings.map { ps ->
+            getMaxThrusterSignalForPhaseSetting(program, ps)
         }
+
+        assertThat(thrusterSignals.max()).isEqualTo(4931744)
     }
+
 }
 
-class FeedbackAmplifier(private val name: String, val program: String, private val phaseSetting: Int) {
-
-    private var programState: ProgramHalted? = null
-
-    fun halted(): Boolean {
-        return (programState?.state ?: "unknown") == "halt"
-    }
-
-    fun run(input: Int): Int {
-        println("$name: input $input")
-
-        programState = ShipsComputer().runProgram(
-            programState?.memory ?: program,
-            listOf(phaseSetting, input).iterator(),
-            programState?.addressPointer ?: 0
-        )
-        println("$name: output ${programState?.output ?: -1}")
-        return programState!!.output!!
-    }
+class FeedbackAmplifier(val program: String) {
 
     companion object {
         val possiblePhaseSettings = listOf(

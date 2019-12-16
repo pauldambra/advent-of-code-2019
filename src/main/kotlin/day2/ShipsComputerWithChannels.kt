@@ -7,7 +7,8 @@ class ShipsComputerWithChannels(
     program: MutableList<Int>,
     val inputs: ReceiveChannel<Int>,
     val outputs: SendChannel<Int>,
-    val halts: SendChannel<Boolean>
+    val halts: SendChannel<Boolean>,
+    val name: String = "unnamed"
 ) {
     companion object {
         fun parseProgram(s: String) =
@@ -20,6 +21,8 @@ class ShipsComputerWithChannels(
     var halted = false
 
     suspend fun run() {
+//        println("$name: started")
+
         while (!halted) {
             val oci: OpCodeInstruction = readOpCode(addressPointer)
             var newPointer: Int? = null
@@ -30,12 +33,12 @@ class ShipsComputerWithChannels(
                 3 -> {
                     val input = inputs.receive() //blocks waiting for input?
                     writeInput(addressPointer, input)
-                    println("read $input from input channel")
+//                    println("$name: read $input from input channel")
                 }
                 4 -> {
                     val output = readFirstParameter(oci, addressPointer)
                     outputs.send(output)
-                    println("sent $output to output channel")
+//                    println("$name: sent $output to output channel")
                 }
                 5 -> {
                     newPointer = jumpIfTrue(oci, addressPointer)
@@ -46,9 +49,7 @@ class ShipsComputerWithChannels(
                 7 -> testForLessThan(oci, addressPointer)
                 8 -> testEquality(oci, addressPointer)
                 99 -> {
-                    println("halting")
                     halted = true
-                    halts.send(halted)
                 }
             }
 
@@ -58,6 +59,11 @@ class ShipsComputerWithChannels(
                 addressPointer += determinePointerJump(oci)
             }
         }
+
+//        println("$name: halting")
+        inputs.cancel()
+        outputs.close()
+        halts.send(true)
     }
 
     private fun determinePointerJump(oci: OpCodeInstruction): Int {
@@ -71,9 +77,7 @@ class ShipsComputerWithChannels(
     }
 
     private fun jumpIfTrue(oci: OpCodeInstruction, addressPointer: Int): Int? {
-        val firstValue = readFirstParameter(oci, addressPointer)
-        val shouldSetPointer = firstValue != 0
-        println("read $firstValue from $addressPointer and decided whether to jump $shouldSetPointer")
+        val shouldSetPointer = readFirstParameter(oci, addressPointer) != 0
         return when {
             shouldSetPointer -> readSecondParameter(oci, addressPointer)
             else -> null
