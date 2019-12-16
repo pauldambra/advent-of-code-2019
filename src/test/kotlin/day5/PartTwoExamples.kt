@@ -1,6 +1,11 @@
 package day5
 
 import day2.ShipsComputer
+import day2.ShipsComputerWithChannels
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
@@ -83,6 +88,33 @@ class PartTwoExamples  {
     @Test
     fun `part 2 solution`() {
         val program = this::class.java.getResource("/day5/puzzleInput.txt").readText().trim()
-        assertThat(ShipsComputer().runProgram(program, 5).output).isEqualTo(652726)
+
+        val inputs = Channel<Int>()
+        val outputs = Channel<Int>()
+        val halts = Channel<Boolean>()
+
+        val computer = ShipsComputerWithChannels(
+            ShipsComputerWithChannels.parseProgram(program),
+            inputs,
+            outputs,
+            halts
+        )
+
+        GlobalScope.launch {
+            computer.run()
+        }
+
+        runBlocking {
+            inputs.send(5)
+            for (output in outputs) {
+                if (output != 0) {
+                    assertThat(output).isEqualTo(652726)
+                    inputs.close()
+                    outputs.close()
+                    halts.close()
+                }
+            }
+        }
+
     }
 }
