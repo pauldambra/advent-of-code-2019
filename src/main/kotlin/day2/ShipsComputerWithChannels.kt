@@ -24,25 +24,25 @@ class ShipsComputerWithChannels(
     var halted = false
 
     suspend fun run() {
-        println("$name: started")
+//        println("$name: started")
 
         while (!halted) {
             val oci: OpCodeInstruction = readOpCode(addressPointer)
             var newPointer: Long? = null
 
-            println("$name: running with $oci at $addressPointer")
+//            println("$name: running with $oci at $addressPointer")
             when (oci.opCode) {
                 1 -> processInstruction(oci, addressPointer, Long::plus)
                 2 -> processInstruction(oci, addressPointer, Long::times)
                 3 -> {
                     val input = inputs.receive() //blocks waiting for input?
                     writeFromInput(oci, addressPointer, input)
-                    println("$name: read $input from input channel")
+//                    println("$name: read $input from input channel")
                 }
                 4 -> {
                     val output = readFirstParameter(oci, addressPointer)
                     outputs.send(output)
-                    println("$name: sent $output to output channel")
+//                    println("$name: sent $output to output channel")
                 }
                 5 -> {
                     newPointer = jumpIfTrue(oci, addressPointer)
@@ -65,7 +65,7 @@ class ShipsComputerWithChannels(
             }
         }
 
-        println("$name: halting")
+//        println("$name: halting")
         inputs.cancel()
         outputs.close()
         halts.send(true)
@@ -85,7 +85,7 @@ class ShipsComputerWithChannels(
     private fun alterRelativeBase(oci: OpCodeInstruction, addressPointer: Long) {
         val relativeBaseAdjustment = readFirstParameter(oci, addressPointer)
         relativeBase += relativeBaseAdjustment
-        println("$name: relative base is now $relativeBase")
+//        println("$name: relative base is now $relativeBase")
     }
 
     private fun jumpIfTrue(oci: OpCodeInstruction, addressPointer: Long): Long? {

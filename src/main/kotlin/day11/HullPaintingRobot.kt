@@ -6,13 +6,22 @@ import kotlinx.coroutines.channels.SendChannel
 
 class Robot(
     val instructions: ReceiveChannel<Long>,
-    private val camera: SendChannel<Long>
+    private val camera: SendChannel<Long>,
+    startingPlateColour: Long = 0L
 ) {
+
+    val grid = mutableMapOf<Long, MutableMap<Long, Long>>()
+    var position = Coordinate(0, 0)
+    private var direction: Direction = Direction.UP
+
+    init {
+        paint(startingPlateColour)
+    }
 
     suspend fun run() {
         var nextOperation = "paint"
         while (true) {
-            println(grid)
+//            println(grid)
             nextOperation = when (nextOperation) {
                 "paint" -> {
                     sendingImageFromCamera()
@@ -32,7 +41,7 @@ class Robot(
 
     private suspend fun sendingImageFromCamera() {
         val plateColour = plateColourAtCurrentLocation()
-        println("Sending camera image $plateColour from $position")
+//        println("Sending camera image $plateColour from $position")
         camera.send(plateColour)
     }
 
@@ -45,24 +54,38 @@ class Robot(
         return row.getOrDefault(coordinate.x.toLong(), 0)
     }
 
-    val grid = mutableMapOf<Long, MutableMap<Long, Long>>()
-
-    var position = Coordinate(0, 0)
-    private var direction: Direction = Direction.UP
-
     fun paint(colour: Long) {
         val row = grid.getOrPut(position.y.toLong()) { mutableMapOf() }
         row[position.x.toLong()] = colour
-        println("painted $position colour: ${plateColourAtCurrentLocation()}")
+//        println("painted $position colour: ${plateColourAtCurrentLocation()}")
     }
 
     private fun move(turn: Long) {
         direction = direction.turn(turn)
         position = position.move(direction)
-        println("moved $direction to $position which is painted ${plateColourAtCurrentLocation()}")
+//        println("moved $direction to $position which is painted ${plateColourAtCurrentLocation()}")
     }
 
     override fun toString(): String {
         return "Robot(position=$position, direction=$direction)"
+    }
+
+    fun printGrid() {
+        val padding = 1
+        val yMin = (grid.keys.min() ?: 0) - padding
+        val yMax = (grid.keys.max() ?: 0) + padding
+
+        val xMin = (grid.minBy { it.value.keys.min() ?: 0 }?.value?.keys?.min() ?: 0) - padding
+        val xMax = (grid.maxBy { it.value.keys.max() ?: 0 }?.value?.keys?.max() ?: 0) + padding
+
+        for (y in yMax downTo yMin) {
+            val row = grid.getOrDefault(y, mutableMapOf())
+
+            for (x in xMin..xMax) {
+                val i = row.getOrDefault(x, 0)
+                print(if (i == 0L) " " else "#")
+            }
+            print("\n")
+        }
     }
 }

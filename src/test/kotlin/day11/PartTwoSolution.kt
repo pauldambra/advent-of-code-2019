@@ -8,10 +8,10 @@ import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
-class PartOneSolution {
+class PartTwoSolution {
 
     @Test
-    fun `can solve part one`() {
+    fun `can solve part two`() {
         val program =
             ShipsComputerWithChannels.parseProgram(this::class.java.getResource("/day11/puzzleInput.txt").readText().trim())
         val inputs = Channel<Long>()
@@ -19,7 +19,7 @@ class PartOneSolution {
         val halts = Channel<Boolean>()
 
         val computer = ShipsComputerWithChannels(program, inputs, outputs, halts, "p1")
-        val robot = Robot(outputs, inputs)
+        val robot = Robot(outputs, inputs, 1)
 
         GlobalScope.launch { computer.run() }
 
@@ -27,11 +27,12 @@ class PartOneSolution {
 
         runBlocking {
             halts.receive()
-
             val squaresPaintedAtLeastOnce = robot.grid.values.sumBy { it.values.count() }
             println("which means the robot has painted $squaresPaintedAtLeastOnce")
 
-            assertThat(squaresPaintedAtLeastOnce).isEqualTo(2172)
+            robot.printGrid()
+
+            assertThat(squaresPaintedAtLeastOnce).isEqualTo(249)
 
         }
     }
