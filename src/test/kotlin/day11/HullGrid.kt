@@ -1,14 +1,18 @@
 package day11
 
-import day11.Direction.*
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class HullGrid {
+
     @Test
     fun `a robot knows when it is on a white square`() {
-        val white = 1
-        val robot = Robot()
+        val white = 1L
+        val robot = Robot(Channel(), Channel())
 
         robot.paint(white)
 
@@ -17,8 +21,8 @@ class HullGrid {
 
     @Test
     fun `a robot knows when it is on a black square`() {
-        val black = 0
-        val robot = Robot()
+        val black = 0L
+        val robot = Robot(Channel(), Channel())
 
         robot.paint(black)
 
@@ -26,23 +30,26 @@ class HullGrid {
     }
 
     @Test
-    fun `a robot can turn left`() {
-        val left = 0
-        val robot = Robot()
-
-        robot.move(left)
-
-        assertThat(robot.position).isEqualTo(Coordinate(-1, 0))
-    }
-
-    @Test
     fun `a robot can turn right`() {
-        val right = 1
-        val robot = Robot()
+        val instructions = Channel<Long>()
+        val camera = Channel<Long>()
+        val robot = Robot(instructions, camera)
 
-        robot.move(right)
+        GlobalScope.launch {
+            readAndDiscardFromCamera(camera)
+        }
 
-        assertThat(robot.position).isEqualTo(Coordinate(1, 0))
+        GlobalScope.launch {
+            robot.run()
+        }
+
+        runBlocking {
+            instructions.send(1)
+            instructions.send(1)
+            instructions.close()
+
+            assertThat(robot.position).isEqualTo(Coordinate(1, 0))
+        }
     }
 
     /**
@@ -62,111 +69,134 @@ class HullGrid {
      */
     @Test
     fun `a robot can turn right twice`() {
-        val right = 1
-        val robot = Robot()
+        val instructions = Channel<Long>()
+        val camera = Channel<Long>()
+        val robot = Robot(instructions, camera)
 
-        robot.move(right)
-        robot.move(right)
-
-        assertThat(robot.position).isEqualTo(Coordinate(1, -1))
-    }
-
-    @Test
-    fun `the grid records the journey`() {
-        val robot = Robot()
-
-        robot.paint(1)
-        robot.move(0)
-
-        robot.paint(1)
-        robot.move(0)
-
-        robot.paint(0)
-        robot.move(1)
-
-        assertThat(robot.grid).isEqualTo(
-            mutableMapOf(
-                0 to mutableMapOf(-1 to 1, 0 to 1),
-                -1 to mutableMapOf(-1 to 0)
-            )
-        )
-    }
-
-    @Test
-    fun `the grid records a different journey`() {
-        val robot = Robot()
-
-        robot.paint(1)
-        robot.move(0)
-
-        robot.paint(0)
-        robot.move(1)
-
-        robot.paint(0)
-        robot.move(1)
-
-        assertThat(robot.grid).isEqualTo(
-            mutableMapOf(
-                0 to mutableMapOf(-1 to 0, 0 to 1),
-                1 to mutableMapOf(-1 to 0)
-            )
-        )
-    }
-}
-
-data class Coordinate(val x: Int, val y: Int) {
-    fun move(direction: Direction) =
-        when (direction) {
-            UP -> Coordinate(x, y + 1)
-            RIGHT -> Coordinate(x + 1, y)
-            DOWN -> Coordinate(x, y - 1)
-            LEFT -> Coordinate(x - 1, y)
+        GlobalScope.launch {
+            readAndDiscardFromCamera(camera)
         }
-}
 
-enum class Direction {
-    UP {
-        override fun turn(turn: Int) =
-            if (turn == 0) LEFT else RIGHT
-    },
-    RIGHT {
-        override fun turn(turn: Int) =
-            if (turn == 0) UP else DOWN
-    },
-    DOWN {
-        override fun turn(turn: Int) =
-            if (turn == 0) RIGHT else LEFT
-    },
-    LEFT {
-        override fun turn(turn: Int) =
-            if (turn == 0) DOWN else UP
-    };
+        GlobalScope.launch {
+            robot.run()
+        }
 
-    abstract fun turn(turn: Int): Direction
+        runBlocking {
+            instructions.send(1)
+            instructions.send(1)
+            instructions.send(1)
+            instructions.send(1)
+            instructions.close()
 
-
-}
-
-class Robot {
-
-    val grid = mutableMapOf<Int, MutableMap<Int, Int>>()
-
-    var position = Coordinate(0, 0)
-    var direction: Direction = UP
-
-    fun paint(colour: Int) {
-        val row = grid.getOrPut(position.y) { mutableMapOf() }
-        row[position.x] = colour
+            assertThat(robot.position).isEqualTo(Coordinate(1, -1))
+        }
     }
 
-    fun move(turn: Int) {
-        direction = direction.turn(turn)
-        position = position.move(direction)
+    private suspend fun readAndDiscardFromCamera(camera: Channel<Long>) {
+        for (image in camera) {
+            println("received image $image")
+        }
     }
 
-    override fun toString(): String {
-        return "Robot(position=$position, direction=$direction)"
+    @Test
+    fun `a robot sends a channel of camera output`() {
+        val instructions = Channel<Long>()
+        val camera = Channel<Long>()
+
+        val robot = Robot(instructions, camera)
+
+        val receivedPlateColours = mutableListOf<Long>()
+        GlobalScope.launch {
+            for (image in camera) {
+                receivedPlateColours.add(image)
+                if (receivedPlateColours.size == 3)
+                    camera.close()
+            }
+        }
+
+        GlobalScope.launch {
+            robot.run()
+        }
+
+        runBlocking {
+            instructions.send(1) //paint
+            instructions.send(0) //move
+            instructions.send(1) //p
+            instructions.send(0) //m
+            instructions.send(1) //p
+            instructions.send(0) //m
+            instructions.close()
+
+            assertThat(receivedPlateColours).containsExactly(0, 0, 0)
+        }
     }
 
+    @Test
+    fun `the robot receives a channel with multiple instructions`() {
+        val instructions = Channel<Long>()
 
+        val camera = Channel<Long>()
+        val robot = Robot(instructions, camera)
+
+        GlobalScope.launch {
+            readAndDiscardFromCamera(camera)
+        }
+
+        GlobalScope.launch {
+            robot.run()
+        }
+
+        runBlocking {
+            instructions.send(1)
+            instructions.send(0)
+            instructions.send(0)
+            instructions.send(1)
+            instructions.send(0)
+            instructions.send(1)
+
+            assertThat(robot.grid).isEqualTo(
+                mutableMapOf(
+                    0L to mutableMapOf(-1L to 0L, 0L to 1L),
+                    1L to mutableMapOf(-1L to 0L)
+                )
+            )
+        }
+    }
+
+    @Test
+    fun `a robot sees painted plates in a channel of camera output`() {
+        val instructions = Channel<Long>()
+        val camera = Channel<Long>()
+
+        val robot = Robot(instructions, camera)
+
+        val receivedPlateColours = mutableListOf<Long>()
+        GlobalScope.launch {
+            for (image in camera) {
+                receivedPlateColours.add(image)
+                if (receivedPlateColours.size == 5)
+                    camera.close()
+            }
+        }
+
+        GlobalScope.launch {
+            robot.run()
+        }
+
+        runBlocking {
+            instructions.send(1) //paint
+            instructions.send(0) //move
+            instructions.send(1) //p
+            instructions.send(0) //m
+            instructions.send(1) //p
+            instructions.send(0) //m
+            instructions.send(1) //p
+            instructions.send(0) //m
+            instructions.send(1) //p
+            instructions.send(0) //m
+            instructions.close()
+
+            assertThat(receivedPlateColours).containsExactly(0, 0, 0, 0, 1)
+        }
+    }
 }

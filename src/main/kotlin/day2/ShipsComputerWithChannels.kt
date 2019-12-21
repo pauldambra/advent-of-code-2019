@@ -155,20 +155,28 @@ class ShipsComputerWithChannels(
         writeTo(targetAddress, operation(firstParameter, secondParameter))
     }
 
-    private fun readFirstParameter(oci: OpCodeInstruction, addressPointer: Long): Long =
-        when (oci.firstParameterMode) {
-            OpCodeInstruction.POSITIONAL -> memory[memory[(addressPointer + 1).toInt()].toInt()]
-            OpCodeInstruction.IMMEDIATE -> memory[(addressPointer + 1).toInt()]
-            OpCodeInstruction.RELATIVE -> memory[(memory[(addressPointer + 1).toInt()] + relativeBase).toInt()]
-            else -> throw Exception("bad OpCodeInstruction for first parameter $oci")
+    private fun readFirstParameter(oci: OpCodeInstruction, addressPointer: Long) =
+        try {
+            when (oci.firstParameterMode) {
+                OpCodeInstruction.POSITIONAL -> memory[memory[(addressPointer + 1).toInt()].toInt()]
+                OpCodeInstruction.IMMEDIATE -> memory[(addressPointer + 1).toInt()]
+                OpCodeInstruction.RELATIVE -> memory[(memory[(addressPointer + 1).toInt()] + relativeBase).toInt()]
+                else -> throw Exception("bad OpCodeInstruction for first parameter $oci")
+            }
+        } catch (e: IndexOutOfBoundsException) {
+            0L
         }
 
-    private fun readSecondParameter(oci: OpCodeInstruction, addressPointer: Long): Long =
-        when (oci.secondParameterMode) {
-            OpCodeInstruction.POSITIONAL -> memory[memory[(addressPointer + 2).toInt()].toInt()]
-            OpCodeInstruction.IMMEDIATE -> memory[(addressPointer + 2).toInt()]
-            OpCodeInstruction.RELATIVE -> memory[(memory[(addressPointer + 2).toInt()] + relativeBase).toInt()]
-            else -> throw Exception("bad OpCodeInstruction for second parameter $oci")
+    private fun readSecondParameter(oci: OpCodeInstruction, addressPointer: Long) =
+        try {
+            when (oci.secondParameterMode) {
+                OpCodeInstruction.POSITIONAL -> memory[memory[(addressPointer + 2).toInt()].toInt()]
+                OpCodeInstruction.IMMEDIATE -> memory[(addressPointer + 2).toInt()]
+                OpCodeInstruction.RELATIVE -> memory[(memory[(addressPointer + 2).toInt()] + relativeBase).toInt()]
+                else -> throw Exception("bad OpCodeInstruction for second parameter $oci")
+            }
+        } catch (e: IndexOutOfBoundsException) {
+            0L
         }
 
     private fun padMemory(pointer: Long) {
