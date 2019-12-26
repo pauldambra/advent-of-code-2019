@@ -35,14 +35,14 @@ class ShipsComputerWithChannels(
                 1 -> processInstruction(oci, addressPointer, Long::plus)
                 2 -> processInstruction(oci, addressPointer, Long::times)
                 3 -> {
-                    println("waiting for input")
+//                    println("waiting for input")
                     val input = inputs.receive() //blocks waiting for input?
                     writeFromInput(oci, addressPointer, input)
 //                    println("$name: read $input from input channel")
                 }
                 4 -> {
                     val output = readFirstParameter(oci, addressPointer)
-                    println("output $output ready")
+//                    println("output $output ready")
                     outputs.send(output)
 //                    println("$name: sent $output to output channel")
                 }
@@ -67,7 +67,7 @@ class ShipsComputerWithChannels(
             }
         }
 
-//        println("$name: halting")
+        println("$name: halting")
         inputs.cancel()
         outputs.close()
         halts.send(true)
