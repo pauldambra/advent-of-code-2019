@@ -67,9 +67,9 @@ class TheNBodyProblem {
     @Test
     fun `can apply velocity a positive velocity to each property of a moon's position`() {
         val a = Moon(5, 0, 3)
-        a.velocity.x = 1
-        a.velocity.y = 2
-        a.velocity.z = 3
+        a.velocity.vs[0] = 1
+        a.velocity.vs[1] = 2
+        a.velocity.vs[2] = 3
 
         a.applyVelocity()
 
@@ -174,6 +174,6 @@ class TheNBodyProblem {
         (0..999).forEach { _ -> Moon.applyStep(moons) }
 
         val totalEnergy = Moon.totalEnergy(moons)
-        assertThat(totalEnergy).isEqualTo(179)
+        assertThat(totalEnergy).isEqualTo(7988)
     }
 }
